@@ -27,7 +27,7 @@ docker run -p 8000:8000 2024_kubernetes_post_api
 ```bash
 kind create cluster --config ./kind/config.yaml
 kind get clusters  # Vérifie qu'il existe bien un cluster kind
-kind load my_image
+kind load docker-image my_image
 
 k9s -n cours-kubernetes # Controller l'état du déploiement kubernetes
 
