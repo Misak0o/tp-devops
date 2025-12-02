@@ -101,6 +101,9 @@ def main(multiple, kafka_host):
 
         post_kafka(transformed_post, kafka_host)
 
+        if not args.multiple:
+            break
+
         time.sleep(10)
 
 
@@ -120,4 +123,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(multiple=args.multiple, kafka_host=args.kafka_host)
-
