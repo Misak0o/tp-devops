@@ -117,12 +117,6 @@ def post_bigquery(transformed_post):
 def main(multiple, kafka_host):
     # Kafka configuration
     bootstrap_servers = [kafka_host]
-
-    # Create Producer instance
-    consumer = KafkaConsumer(
-        bootstrap_servers=bootstrap_servers,
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
     
     consumer = KafkaConsumer(
         TOPIC,                         # topic name
