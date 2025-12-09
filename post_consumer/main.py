@@ -6,7 +6,7 @@ from google.cloud import bigquery
 import re
 import time
 import argparse
-from kafka import KafkaConsumer
+from kafka import KafkaProducer
 
 
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +42,9 @@ def create_dataset_if_not_exists(client, dataset_id, project_id):
         log.info(f"Dataset {dataset_id} does not exist. Creating it.")
         dataset = bigquery.Dataset(dataset_ref)
         dataset.location = "US"  # Adjust location as needed
-        dataset.default_table_expiration_ms = 3600000 * 24  # Example: 24 hours, adjust as needed
+        dataset.default_table_expiration_ms = (
+                3600000 * 24
+        )  # Example: 24 hours, adjust as needed
         client.create_dataset(dataset)  # Make an API request.
         log.info(f"Created dataset {dataset_id}.")
 
@@ -73,11 +75,10 @@ def post_bigquery(transformed_post):
     client = bigquery.Client()
 
     project_id = client.project
-    dataset_id = 'data_devops'
-    table_id = 'posts'
+    dataset_id = "data_devops"
+    table_id = "posts"
 
     create_dataset_if_not_exists(client, dataset_id, project_id)
-
 
     # Define the BigQuery table
     table_ref = client.dataset(dataset_id).table(table_id)
@@ -93,14 +94,18 @@ def post_bigquery(transformed_post):
         table = client.create_table(table)
         log.info(f"Created table {table_id}.")
 
-    temp_filepath = '/tmp/post.json'
+    temp_filepath = "/tmp/post.json"
     save_post_to_json(transformed_post, temp_filepath)
 
     # Load the JSON file into BigQuery
-    with open(temp_filepath, 'rb') as json_file:
-        job = client.load_table_from_file(json_file, table_ref, job_config=bigquery.LoadJobConfig(
-            source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
-        ))
+    with open(temp_filepath, "rb") as json_file:
+        job = client.load_table_from_file(
+            json_file,
+            table_ref,
+            job_config=bigquery.LoadJobConfig(
+                source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
+            ),
+        )
 
     job.result()  # Wait for the job to complete
 
@@ -109,7 +114,7 @@ def post_bigquery(transformed_post):
     else:
         log.info("Encountered errors while inserting rows: {}".format(job.errors))
 
-def kafka_consume(kafka_host):
+def main(multiple, kafka_host):
     # Kafka configuration
     bootstrap_servers = [kafka_host]
 
@@ -135,36 +140,13 @@ def kafka_consume(kafka_host):
         #posts = consumer.poll();
         for message in consumer:
             post_bigquery(message)
+            print(f"Posting message {message}")
+            if not multiple:
+                break
     except Exception as e:
         print(f"Message poll failed: {e}")
     finally:
         consumer.close()
-
-def main(multiple, kafka_host):
-    # Load the post from the JSON file
-    data_filepath = "./data/movies-stackexchange/json/posts.json"
-    log.info(data_filepath)
-    log.info(os.getcwd())
-    with open(data_filepath, "r") as f:
-        content = f.read()
-    posts = json.loads(content)
-
-    while True:
-        post = random.choice(posts)
-
-        allowed_columns = {field.name for field in SCHEMA}
-        # Transform the post for insertion and save to a temporary JSON file
-        transformed_post = transform_and_filter_post(post, allowed_columns)
-        
-        if not kafka_host:
-            post_bigquery(transformed_post)
-        else:
-            post_kafka(transformed_post, kafka_host)
-
-        if not args.multiple:
-            break
-
-        time.sleep(10)
 
 # Main execution
 if __name__ == "__main__":
