@@ -6,7 +6,7 @@ from google.cloud import bigquery
 import re
 import time
 import argparse
-from kafka import KafkaProducer
+from kafka import KafkaConsumer
 
 
 logging.basicConfig(level=logging.INFO)

@@ -2,7 +2,6 @@ import logging
 import random
 import os
 import json
-from google.cloud import bigquery
 import re
 import time
 import argparse
