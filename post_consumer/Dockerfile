@@ -1,4 +1,4 @@
-FROM python:3.9.20-slim-bookworm
+FROM python:3.10.19-slim-bookworm
 
 RUN pip install google-cloud-bigquery kafka-python
 ENV PYTHONUNBUFFERED=1
